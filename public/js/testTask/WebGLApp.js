@@ -1,6 +1,8 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { Cube } from './Cube';
 
+const path = '../js/testTask/';
+
 export class WebGLApp {
     constructor() {
         this.canvas = document.getElementById('glCanvas');
@@ -9,10 +11,6 @@ export class WebGLApp {
         }
 
         this.gl = this.canvas.getContext('webgl');
-        if (!this.gl) {
-            alert('WebGL not supported');
-            return;
-        }
         this.program = null;
         this.cube = new Cube();
         this.rotation = { x: 0, y: 0 };
@@ -56,8 +54,8 @@ export class WebGLApp {
         }
 
         try {
-            const vsSource = await loadShader('../shaders/vertex.glsl');
-            const fsSource = await loadShader('../shaders/fragment.glsl');
+            const vsSource = await loadShader(`${path}shaders/vertex.glsl`);
+            const fsSource = await loadShader(`${path}shaders/fragment.glsl`);
 
             this.program = this.createProgram(vsSource, fsSource);
             this.gl.useProgram(this.program);
