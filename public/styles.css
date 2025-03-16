@@ -3,17 +3,20 @@ body, html {
     padding: 0;
     overflow: hidden;
     height: 100%;
-    display: flex;
-    justify-content: center; 
-    align-items: center; 
+    width: 100%;
     background-color: #1a1a1a;
+    color: #fff;
+    font-family: Arial, sans-serif;
 }
 
 canvas {
-    width: 75vw;
-    height: 75vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     display: block;
-    border: 2px solid #fff;
+    border: none;
 }
 
 .back-button {
@@ -36,4 +39,49 @@ canvas {
 
 .back-button:hover {
     background-color: rgba(0, 0, 0, 0.8);
+}
+
+.controls-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+button {
+    padding: 5px 10px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.active {
+    background-color: #666;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #555;
 }
