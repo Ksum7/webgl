@@ -1,6 +1,7 @@
 precision mediump float;
 varying float vDiffuseFactor;
 varying float vSpecularFactor;
+varying float vAttenuation;
 varying vec4 vColor;
 varying vec2 vTexCoord;
 uniform sampler2D uMaterialTexture;
@@ -10,8 +11,6 @@ uniform float uColorMixFactor;
 uniform vec3 uLightColor;
 uniform vec3 uAmbientLight;
 uniform vec3 uSpecularColor;
-uniform float uAttenuationLinear;
-uniform float uAttenuationQuadratic;
 uniform int uLightingModel;
 
 void main() {
@@ -24,7 +23,7 @@ void main() {
     vec3 ambient = uAmbientLight * baseColor.rgb;
     vec3 diffuse = vDiffuseFactor * uLightColor * baseColor.rgb;
     vec3 specular = vSpecularFactor * uLightColor * uSpecularColor;
-    vec3 totalColor = ambient + diffuse + specular;
+    vec3 totalColor = ambient + vAttenuation * (diffuse + specular);
 
     if (uLightingModel == 3) {
         if (vDiffuseFactor >= 0.95) {
