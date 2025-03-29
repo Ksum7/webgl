@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Task 5</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">←</a>
+    <canvas id="glCanvas"></canvas>
+    <div class="controls-panel">
+        <div class="control-group">
+            <h3>Shading Model</h3>
+            <div class="button-group">
+                <button id="gouraudBtn">Gouraud</button>
+                <button id="phongBtn">Phong</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>Lighting Model</h3>
+            <div class="button-group">
+                <button id="lambertianBtn">Lambertian</button>
+                <button id="phongLightingBtn">Phong</button>
+                <button id="blinnPhongBtn">Blinn-Phong</button>
+                <button id="toonBtn">Toon</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="attenuationLinear">Linear Attenuation: </label>
+                <input type="range" id="attenuationLinear" min="0" max="1" step="0.01" value="0.1">
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="attenuationQuadratic">Quadratic Attenuation: </label>
+                <input type="range" id="attenuationQuadratic" min="0" max="1" step="0.01" value="0.01">
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="ambientLight">Ambient Light: </label>
+                <input type="range" id="ambientLight" min="0" max="1" step="0.01" value="0.1">
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="textureMixSlider">Смешивание текстур: 0 (Материал) — 1 (Число)</label>
+                <input type="range" id="textureMixSlider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="colorMixSlider">Смешивание с цветом: 0 (Текстура) — 1 (Цвет)</label>
+                <input type="range" id="colorMixSlider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/task5/init.js"></script>
+</body>
+</html>
