@@ -1,62 +1,74 @@
+#version 300 es
 precision mediump float;
-varying vec3 vPositionEye;
-varying vec3 vNormalEye;
-varying vec4 vColor;
-varying vec2 vTexCoord;
-uniform vec3 uLightPositionEye;
-uniform vec3 uLightColor;
+
+#define MAX_LIGHTS 10
+uniform int uNumLights;
+uniform int uLightTypes[MAX_LIGHTS]; // 0 - point, 1 - directional, 2 - spot
+
+uniform vec3 uLightPositions[MAX_LIGHTS];
+uniform vec3 uLightDirections[MAX_LIGHTS];
+uniform vec3 uLightColors[MAX_LIGHTS];
+uniform float uLightIntensities[MAX_LIGHTS];
+uniform float uLightAttenuationLinear[MAX_LIGHTS];
+uniform float uLightAttenuationQuadratic[MAX_LIGHTS];
+uniform float uLightCutoffs[MAX_LIGHTS];
+
+in vec3 vPositionEye;
+in vec3 vNormalEye;
+in vec4 vColor;
+in vec2 vTexCoord;
+
+out vec4 fragColor;
+
 uniform vec3 uAmbientLight;
 uniform vec3 uSpecularColor;
 uniform float uShininess;
-uniform float uAttenuationLinear;
-uniform float uAttenuationQuadratic;
 uniform bool uUseSpecular;
-uniform int uLightingModel;
 uniform sampler2D uMaterialTexture;
-uniform float uTextureMixFactor;
-uniform float uColorMixFactor;
 
 void main() {
-    vec4 baseColor = texture2D(uMaterialTexture, vTexCoord);
-
+    vec4 baseColor = texture(uMaterialTexture, vTexCoord);
     vec3 normal = normalize(vNormalEye);
-    vec3 lightDir = normalize(uLightPositionEye - vPositionEye);
-    float distance = length(uLightPositionEye - vPositionEye);
-    float attenuation = 1.0 / (1.0 + uAttenuationLinear * distance + uAttenuationQuadratic * distance * distance);
-    float diffuse = max(dot(normal, lightDir), 0.0);
+    vec3 viewDir = normalize(-vPositionEye);
+    vec3 totalDiffuse = vec3(0.0);
+    vec3 totalSpecular = vec3(0.0);
 
-    vec3 ambient = uAmbientLight * baseColor.rgb;
-    vec3 diffuseColor = diffuse * uLightColor * baseColor.rgb;
-    vec3 totalColor = ambient;
+    for (int i = 0; i < uNumLights; i++) {
+        vec3 lightColor = uLightColors[i] * uLightIntensities[i];
+        vec3 lightDir;
+        float attenuation = 1.0;
+        float diffuse = 0.0;
 
-    if (uUseSpecular) {
-        vec3 viewDir = normalize(-vPositionEye);
-        float specular = 0.0;
-        if (uLightingModel == 1) { // Phong
-            vec3 reflectDir = reflect(-lightDir, normal);
-            specular = pow(max(dot(reflectDir, viewDir), 0.0), uShininess);
-        } else if (uLightingModel == 2) { // Blinn-Phong
+        if (uLightTypes[i] == 0) { // Точечный источник
+            lightDir = normalize(uLightPositions[i] - vPositionEye);
+            float distance = length(uLightPositions[i] - vPositionEye);
+            attenuation = 1.0 / (1.0 + uLightAttenuationLinear[i] * distance + uLightAttenuationQuadratic[i] * distance * distance);
+            diffuse = max(dot(normal, lightDir), 0.0);
+        } else if (uLightTypes[i] == 1) { // Направленный источник
+            lightDir = normalize(-uLightDirections[i]);
+            diffuse = max(dot(normal, lightDir), 0.0);
+        } else if (uLightTypes[i] == 2) { // Прожекторный источник
+            lightDir = normalize(uLightPositions[i] - vPositionEye);
+            float distance = length(uLightPositions[i] - vPositionEye);
+            attenuation = 1.0 / (1.0 + uLightAttenuationLinear[i] * distance + uLightAttenuationQuadratic[i] * distance * distance);
+            vec3 spotDir = normalize(-uLightDirections[i]);
+            float spotEffect = dot(spotDir, lightDir);
+            if (spotEffect > uLightCutoffs[i]) {
+                diffuse = max(dot(normal, lightDir), 0.0) * (spotEffect - uLightCutoffs[i]) / (1.0 - uLightCutoffs[i]);
+            } else {
+                diffuse = 0.0;
+            }
+        }
+
+        totalDiffuse += attenuation * diffuse * lightColor;
+
+        if (uUseSpecular && diffuse > 0.0) {
             vec3 halfDir = normalize(lightDir + viewDir);
-            specular = pow(max(dot(normal, halfDir), 0.0), uShininess);
-        } else if (uLightingModel == 3) { // Toon
-            specular = dot(normal, lightDir) > 0.95 ? 1.0 : 0.0;
-        }
-        vec3 specularColor = specular * uLightColor * uSpecularColor;
-        totalColor += attenuation * (diffuseColor + specularColor);
-    } else {
-        totalColor += attenuation * diffuseColor;
-    }
-
-    if (uLightingModel == 3) {
-        if (diffuse >= 0.95) {
-        } else if (diffuse >= 0.5) {
-            totalColor *= 0.7;
-        } else if (diffuse >= 0.25) {
-            totalColor *= 0.4;
-        } else {
-            totalColor *= 0.2;
+            float specular = pow(max(dot(normal, halfDir), 0.0), uShininess);
+            totalSpecular += attenuation * specular * lightColor * uSpecularColor;
         }
     }
 
-    gl_FragColor = vec4(totalColor, baseColor.a);
+    vec3 totalColor = uAmbientLight * baseColor.rgb + totalDiffuse + totalSpecular;
+    fragColor = vec4(totalColor, baseColor.a);
 }

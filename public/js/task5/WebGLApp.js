@@ -3,6 +3,7 @@ import { Cube } from './Cube';
 import { ShaderProgram } from './ShaderProgram';
 import { loadTexture } from './TextureLoader';
 import { ThreeObject } from './ThreeObject';
+import { PointLight, DirectionalLight, SpotLight } from './Light';
 
 const path = '../js/task5/';
 
@@ -14,12 +15,11 @@ export class WebGLApp {
             throw new Error('Canvas element not found or not a canvas');
         }
 
-        this.gl = this.canvas.getContext('webgl');
+        this.gl = this.initWebGL(this.canvas);
         this.shaderProgram = null;
 
-        this.podiumRotation = 0;
-        this.globalRotation = 0;
         this.lastTime = 0;
+        this.lastFPSTime = 0;
 
         this.objs = [
             new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.01, [1, 1, 1, 1]),
@@ -28,6 +28,7 @@ export class WebGLApp {
             new ThreeObject(this.gl, 'rock', 1, [15, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'fish', 1, [20, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             new Cube(this.gl, 1, [-3, 0, 0], { x: 0, y: 0 }, [1, 1, 1, 1]),
+            new Cube(this.gl, 0.1, [0, 1, 1], { x: 0, y: 0 }, [1, 1, 1, 1]),
         ];
 
         this.textures = [loadTexture(this.gl, '../../textures/fish.png')];
@@ -49,12 +50,12 @@ export class WebGLApp {
         this.shininess = 32.0;
         this.attenuationLinear = 0.1;
         this.attenuationQuadratic = 0.01;
-        this.shadingModel = 'gouraud';
-        this.lightingModel = 0;
 
-        (this.numberTexture = loadTexture(this.gl, '../../textures/number1.png')),
-            (this.lightCube = new Cube(this.gl, 0.1, this.lightPosition, { x: 0, y: 0 }, [1, 1, 1, 0.5]));
-        this.lightCube.setTexture(this.numberTexture);
+        this.lights = [
+            new PointLight([0, 1, 1], [1, 1, 1], 0.1, 0.1, 0.01),
+            // new DirectionalLight([0, 1, 1], [0.8, 0.8, 0.8], 0.5),
+            // new SpotLight([0, 0, 0], [5, 0, 0], [1, 0, 0], 1.0, 0.9),
+        ];
 
         this.cameraPosition = [0, 0, -5];
         this.cameraRotation = { yaw: 0, pitch: 0 };
@@ -70,6 +71,20 @@ export class WebGLApp {
         });
     }
 
+    initWebGL(canvas) {
+        let gl = null;
+        const names = ['webgl2', 'webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
+        for (let i = 0; i < names.length; ++i) {
+            try {
+                gl = canvas.getContext(names[i]);
+            } catch (e) {}
+            if (gl) {
+                break;
+            }
+        }
+        return gl;
+    }
+
     // @ts-ignore
     async init() {
         if (!this.gl) {
@@ -77,22 +92,40 @@ export class WebGLApp {
             return;
         }
 
-        const vsGouraudSource = await this.loadShader(`${path}shaders/vertex_gouraud.glsl`);
-        const fsGouraudSource = await this.loadShader(`${path}shaders/fragment_gouraud.glsl`);
-        this.gouraudProgram = new ShaderProgram(this.gl, vsGouraudSource, fsGouraudSource);
-
         const vsPhongSource = await this.loadShader(`${path}shaders/vertex_phong.glsl`);
         const fsPhongSource = await this.loadShader(`${path}shaders/fragment_phong.glsl`);
         this.phongProgram = new ShaderProgram(this.gl, vsPhongSource, fsPhongSource);
 
-        if (!this.gouraudProgram.program || !this.phongProgram.program) {
+        if (!this.phongProgram.program) {
             console.error('Не удалось создать шейдерные программы');
             return;
         }
+        // document.getElementById('attenuationLinear').addEventListener('input', (e) => {
+        //     // @ts-ignore
+        //     this.attenuationLinear = parseFloat(e.target.value);
+        // });
+        // document.getElementById('attenuationQuadratic').addEventListener('input', (e) => {
+        //     // @ts-ignore
+        //     this.attenuationQuadratic = parseFloat(e.target.value);
+        // });
+        document.getElementById('ambientLight').addEventListener('input', (e) => {
+            // @ts-ignore
+            const value = parseFloat(e.target.value);
+            this.ambientLight = [value, value, value];
+        });
 
         this.resizeCanvas();
+
         window.addEventListener('resize', () => this.resizeCanvas());
 
+        this.setupControls();
+
+        this.gl.enable(this.gl.DEPTH_TEST);
+
+        requestAnimationFrame((t) => this.animate(t));
+    }
+
+    setupControls() {
         window.addEventListener('keydown', (event) => {
             this.keys[event.key] = true;
         });
@@ -101,72 +134,6 @@ export class WebGLApp {
             this.keys[event.key] = false;
         });
 
-        this.setupControls();
-
-        this.gl.enable(this.gl.DEPTH_TEST);
-
-        function updateActiveButton(group, activeId) {
-            const buttons =
-                group === 'shading'
-                    ? ['gouraudBtn', 'phongBtn']
-                    : ['lambertianBtn', 'phongLightingBtn', 'blinnPhongBtn', 'toonBtn'];
-
-            buttons.forEach((id) => {
-                const btn = document.getElementById(id);
-                if (id === activeId) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        document.getElementById('gouraudBtn').addEventListener('click', () => {
-            updateActiveButton('shading', 'gouraudBtn');
-            this.shadingModel = 'gouraud';
-        });
-        document.getElementById('phongBtn').addEventListener('click', () => {
-            updateActiveButton('shading', 'phongBtn');
-            this.shadingModel = 'phong';
-        });
-        document.getElementById('lambertianBtn').addEventListener('click', () => {
-            updateActiveButton('lighting', 'lambertianBtn');
-            this.lightingModel = 0;
-        });
-        document.getElementById('phongLightingBtn').addEventListener('click', () => {
-            updateActiveButton('lighting', 'phongLightingBtn');
-            this.lightingModel = 1;
-        });
-        document.getElementById('blinnPhongBtn').addEventListener('click', () => {
-            updateActiveButton('lighting', 'blinnPhongBtn');
-            this.lightingModel = 2;
-        });
-        document.getElementById('toonBtn').addEventListener('click', () => {
-            updateActiveButton('lighting', 'toonBtn');
-            this.lightingModel = 3;
-        });
-
-        document.getElementById('attenuationLinear').addEventListener('input', (e) => {
-            // @ts-ignore
-            this.attenuationLinear = parseFloat(e.target.value);
-        });
-        document.getElementById('attenuationQuadratic').addEventListener('input', (e) => {
-            // @ts-ignore
-            this.attenuationQuadratic = parseFloat(e.target.value);
-        });
-        document.getElementById('ambientLight').addEventListener('input', (e) => {
-            // @ts-ignore
-            const value = parseFloat(e.target.value);
-            this.ambientLight = [value, value, value];
-        });
-
-        updateActiveButton('shading', 'gouraudBtn');
-        updateActiveButton('lighting', 'lambertianBtn');
-
-        requestAnimationFrame((t) => this.animate(t));
-    }
-
-    setupControls() {
         window.addEventListener('keydown', (event) => {
             if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
                 this.keys['shift'] = true;
@@ -203,7 +170,10 @@ export class WebGLApp {
             if (this.isMouseLocked) {
                 this.cameraRotation.yaw -= event.movementX * this.mouseSensitivity;
                 this.cameraRotation.pitch -= event.movementY * this.mouseSensitivity;
-                this.cameraRotation.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.cameraRotation.pitch));
+                this.cameraRotation.pitch = Math.max(
+                    -Math.PI / 2 + 0.01,
+                    Math.min(Math.PI / 2 - 0.01, this.cameraRotation.pitch)
+                );
             }
         });
     }
@@ -279,30 +249,19 @@ export class WebGLApp {
         this.gl.clearColor(0.1, 0.1, 0.1, 1.0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-        const shaderProgram = this.shadingModel === 'gouraud' ? this.gouraudProgram : this.phongProgram;
+        const shaderProgram = this.phongProgram;
         shaderProgram.use();
 
-        const cameraViewMatrix = mat4.create();
-        mat4.rotateY(cameraViewMatrix, this.viewMatrix, this.globalRotation);
         // @ts-ignore
-        const lightPositionEye = vec3.transformMat4(vec3.create(), this.lightPosition, cameraViewMatrix);
-
-        shaderProgram.setUniform3fv('uLightPositionEye', lightPositionEye);
-        shaderProgram.setUniform3fv('uLightColor', this.lightColor);
+        shaderProgram.setLights(this.lights, this.viewMatrix);
         shaderProgram.setUniform3fv('uAmbientLight', this.ambientLight);
-        shaderProgram.setUniform3fv('uSpecularColor', this.specularColor);
         shaderProgram.setUniform1f('uShininess', this.shininess);
-        shaderProgram.setUniform1f('uAttenuationLinear', this.attenuationLinear);
-        shaderProgram.setUniform1f('uAttenuationQuadratic', this.attenuationQuadratic);
-        shaderProgram.setUniform1i('uUseSpecular', this.lightingModel > 0 ? 1 : 0);
-        shaderProgram.setUniform1i('uLightingModel', this.lightingModel);
 
-        const updatedViewMatrix = mat4.rotateY(mat4.create(), this.viewMatrix, this.globalRotation);
-
-        this.lightCube.render(shaderProgram, updatedViewMatrix, this.projectionMatrix);
+        shaderProgram.setUniform3fv('uSpecularColor', this.specularColor);
+        shaderProgram.setUniform1i('uUseSpecular', 1);
 
         this.objs.forEach((obj) => {
-            obj.render(shaderProgram, updatedViewMatrix, this.projectionMatrix);
+            obj.render(shaderProgram, this.viewMatrix, this.projectionMatrix);
         });
     }
 
@@ -312,9 +271,12 @@ export class WebGLApp {
 
         this.updateCamera(deltaTime);
 
-        this.render();
+        if (timestamp - this.lastFPSTime > 100) {
+            document.getElementById('fpsCounter').textContent = `FPS: ${Math.floor(1 / deltaTime)}`;
+            this.lastFPSTime = timestamp;
+        }
 
-        document.getElementById('fpsCounter').textContent = `FPS: ${Math.floor(1 / deltaTime)}`;
+        this.render();
 
         requestAnimationFrame((t) => this.animate(t));
     }

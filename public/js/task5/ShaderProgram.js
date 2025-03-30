@@ -26,6 +26,48 @@ export class ShaderProgram {
         };
     }
 
+    setLights(lights, viewMatrix) {
+        const types = [];
+        const positions = [];
+        const directions = [];
+        const colors = [];
+        const intensities = [];
+        const attenuationLinears = [];
+        const attenuationQuadratics = [];
+        const cutoffs = [];
+
+        lights.forEach((light) => {
+            const data = light.getLightDataInEyeSpace(viewMatrix);
+            types.push(data.type);
+            positions.push(...data.position);
+            directions.push(...data.direction);
+            colors.push(...data.color);
+            intensities.push(data.intensity);
+            attenuationLinears.push(data.attenuationLinear || 0.0);
+            attenuationQuadratics.push(data.attenuationQuadratic || 0.0);
+            cutoffs.push(data.cutoff || 0.0); // Для прожекторов, 0 для других типов
+        });
+
+        this.gl.uniform1i(this.gl.getUniformLocation(this.program, 'uNumLights'), lights.length);
+        this.gl.uniform1iv(this.gl.getUniformLocation(this.program, 'uLightTypes'), new Int32Array(types));
+        this.gl.uniform3fv(this.gl.getUniformLocation(this.program, 'uLightPositions'), new Float32Array(positions));
+        this.gl.uniform3fv(this.gl.getUniformLocation(this.program, 'uLightDirections'), new Float32Array(directions));
+        this.gl.uniform3fv(this.gl.getUniformLocation(this.program, 'uLightColors'), new Float32Array(colors));
+        this.gl.uniform1fv(
+            this.gl.getUniformLocation(this.program, 'uLightIntensities'),
+            new Float32Array(intensities)
+        );
+        this.gl.uniform1fv(
+            this.gl.getUniformLocation(this.program, 'uLightAttenuationLinear'),
+            new Float32Array(attenuationLinears)
+        );
+        this.gl.uniform1fv(
+            this.gl.getUniformLocation(this.program, 'uLightAttenuationQuadratic'),
+            new Float32Array(attenuationQuadratics)
+        );
+        this.gl.uniform1fv(this.gl.getUniformLocation(this.program, 'uLightCutoffs'), new Float32Array(cutoffs));
+    }
+
     createProgram(vsSource, fsSource) {
         const program = this.gl.createProgram();
         const vertexShader = this.compileShader(this.gl.VERTEX_SHADER, vsSource);
