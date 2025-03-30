@@ -10,6 +10,7 @@ const path = '../js/task5/';
 export class WebGLApp {
     constructor() {
         this.keys = {};
+        this.prevKeys = {};
         this.canvas = document.getElementById('glCanvas');
         if (!(this.canvas instanceof HTMLCanvasElement)) {
             throw new Error('Canvas element not found or not a canvas');
@@ -35,7 +36,8 @@ export class WebGLApp {
         this.playerOffset = [0, 0, 2];
         this.playerRotationOffset = { x: Math.PI / 2, y: 0 };
 
-        this.player.setRotation(this.playerRotationOffset.x, this.playerRotationOffset.y);
+        this.playerLight = new SpotLight([0, 0, 0], [0, 0, 0], [1, 0, 0], 1.0, 0.9);
+        this.isUFOLightActive = true;
 
         this.textures = [loadTexture(this.gl, '../../textures/fish.png')];
 
@@ -109,6 +111,11 @@ export class WebGLApp {
             const value = parseFloat(e.target.value);
             this.ambientLight = [value, value, value];
         });
+        document.getElementById('UFOLight').addEventListener('click', () => {
+            this.isUFOLightActive = !this.isUFOLightActive;
+            this.updateUFOLight(this.isUFOLightActive);
+        });
+        this.updateUFOLight(this.isUFOLightActive);
 
         this.resizeCanvas();
 
@@ -122,14 +129,6 @@ export class WebGLApp {
     }
 
     setupControls() {
-        window.addEventListener('keydown', (event) => {
-            this.keys[event.key] = true;
-        });
-
-        window.addEventListener('keyup', (event) => {
-            this.keys[event.key] = false;
-        });
-
         window.addEventListener('keydown', (event) => {
             if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
                 this.keys['shift'] = true;
@@ -172,6 +171,14 @@ export class WebGLApp {
                 );
             }
         });
+    }
+    updateUFOLight(isActive) {
+        const btn = document.getElementById('UFOLight');
+        if (isActive) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     }
 
     updateCamera(deltaTime) {
@@ -252,8 +259,11 @@ export class WebGLApp {
 
         const shaderProgram = this.phongProgram;
         shaderProgram.use();
-
-        shaderProgram.setLights(this.lights, this.viewMatrix);
+        const currentLights = [...this.lights];
+        if (this.isUFOLightActive) {
+            currentLights.push(this.playerLight);
+        }
+        shaderProgram.setLights(currentLights, this.viewMatrix);
         shaderProgram.setUniform3fv('uAmbientLight', this.ambientLight);
         shaderProgram.setUniform1f('uShininess', this.shininess);
         shaderProgram.setUniform3fv('uSpecularColor', this.specularColor);
@@ -285,6 +295,13 @@ export class WebGLApp {
             this.playerRotationOffset.y + this.cameraRotation.yaw
         );
 
+        this.playerLight.position = [
+            playerPosition[0] + offsetUp[0] + offsetForward[0] * 0.1,
+            playerPosition[1],
+            playerPosition[2] + offsetUp[2] + offsetForward[2] * 0.1,
+        ];
+        this.playerLight.direction = [offsetForward[0], playerPosition[1], offsetForward[2]];
+
         const playerAABB = this.player.getWorldAABB();
         this.objs.forEach((obj) => {
             if (obj !== this.player && obj.localAABB) {
@@ -311,6 +328,11 @@ export class WebGLApp {
         const deltaTime = (timestamp - this.lastTime) * 0.001;
         this.lastTime = timestamp;
 
+        if (this.keys['q'] && !this.prevKeys['q']) {
+            this.isUFOLightActive = !this.isUFOLightActive;
+            this.updateUFOLight(this.isUFOLightActive);
+        }
+
         this.updateCamera(deltaTime);
 
         this.objs.forEach((obj) => obj.update(deltaTime));
@@ -335,6 +357,9 @@ export class WebGLApp {
         }
 
         this.render();
+
+        // @ts-ignore
+        Object.assign(this.prevKeys, this.keys);
 
         requestAnimationFrame((t) => this.animate(t));
     }
