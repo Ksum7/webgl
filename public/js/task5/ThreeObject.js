@@ -21,35 +21,89 @@ export class ThreeObject extends RenderableObject {
 
         // LOAD DATA
         const objLoader = new OBJLoader();
-
+        // @ts-ignore
         objLoader.load(
             objPath,
             (object) => {
-                // @ts-ignore
-                const geometry = object.children[0].geometry;
+                try {
+                    let totalVertices = 0;
+                    let totalNormals = 0;
+                    let totalTexCoords = 0;
+                    let totalIndices = 0;
 
-                //@ts-ignore
-                console.log('Bounding box:', geometry.boundingBox);
+                    object.children.forEach((child) => {
+                        // @ts-ignore
+                        const geometry = child.geometry;
+                        totalVertices += geometry.attributes.position.array.length;
+                        if (geometry.attributes.normal) totalNormals += geometry.attributes.normal.array.length;
+                        if (geometry.attributes.uv) totalTexCoords += geometry.attributes.uv.array.length;
+                        if (geometry.index) totalIndices += geometry.index.array.length;
+                    });
 
-                this.vertices = geometry.attributes.position.array;
-                this.normals = geometry.attributes.normal?.array;
-                this.texCoords = geometry.attributes.uv?.array;
-                this.indices = geometry.index?.array;
+                    const allVertices = new Float32Array(totalVertices);
+                    const allNormals = totalNormals ? new Float32Array(totalNormals) : null;
+                    const allTexCoords = totalTexCoords ? new Float32Array(totalTexCoords) : null;
+                    const allIndices = totalIndices ? new Uint16Array(totalIndices) : null;
 
-                if (geometry.attributes.uv && geometry.attributes.uv.array.length !== (this.vertices.length / 3) * 2) {
-                    console.warn(`Несоответствие текстурных координат для ${name}`);
+                    let vertexOffset = 0;
+                    let normalOffset = 0;
+                    let texCoordOffset = 0;
+                    let indexOffset = 0;
+
+                    object.children.forEach((child) => {
+                        // @ts-ignore
+                        const geometry = child.geometry;
+
+                        const vertices = geometry.attributes.position.array;
+                        const normals = geometry.attributes.normal?.array;
+                        const texCoords = geometry.attributes.uv?.array;
+                        const indices = geometry.index?.array;
+
+                        allVertices.set(vertices, vertexOffset);
+                        if (normals && allNormals) allNormals.set(normals, normalOffset);
+                        if (texCoords && allTexCoords) allTexCoords.set(texCoords, texCoordOffset);
+
+                        if (indices && allIndices) {
+                            // @ts-ignore
+                            const offsetIndices = Array.from(indices).map((index) => index + vertexOffset / 3);
+                            allIndices.set(offsetIndices, indexOffset);
+                            indexOffset += indices.length;
+                        }
+
+                        vertexOffset += vertices.length;
+                        if (normals) normalOffset += normals.length;
+                        if (texCoords) texCoordOffset += texCoords.length;
+                    });
+                    // @ts-ignore
+                    this.vertices = allVertices;
+                    // @ts-ignore
+                    this.normals = allNormals;
+                    // @ts-ignore
+                    this.texCoords = allTexCoords;
+                    // @ts-ignore
+                    this.indices = allIndices;
+
+                    if (this.texCoords && this.texCoords.length !== (this.vertices.length / 3) * 2) {
+                        console.warn(`Несоответствие текстурных координат для ${name}`);
+                    }
+
+                    this.vertexBuffer = this.createBuffer(this.vertices, this.gl.ARRAY_BUFFER);
+                    this.colorBuffer = this.createBuffer(new Float32Array(this.colors), this.gl.ARRAY_BUFFER);
+                    this.normalBuffer = this.normals ? this.createBuffer(this.normals, this.gl.ARRAY_BUFFER) : null;
+                    this.texCoordBuffer = this.texCoords
+                        ? this.createBuffer(this.texCoords, this.gl.ARRAY_BUFFER)
+                        : null;
+                    this.indexBuffer = this.indices
+                        ? this.createBuffer(this.indices, this.gl.ELEMENT_ARRAY_BUFFER)
+                        : null;
+
+                    this.setPosition(position[0], position[1], position[2]);
+                    this.setRotation(rotation.x, rotation.y);
+                    this.setScale(scale);
+                    this.loaded = true;
+                } catch (error) {
+                    console.error('Ошибка обработки OBJ данных:', error);
                 }
-
-                this.vertexBuffer = this.createBuffer(new Float32Array(this.vertices), this.gl.ARRAY_BUFFER);
-                this.colorBuffer = this.createBuffer(new Float32Array(this.colors), this.gl.ARRAY_BUFFER);
-                this.normalBuffer = this.createBuffer(new Float32Array(this.normals), this.gl.ARRAY_BUFFER);
-                this.texCoordBuffer = this.createBuffer(new Float32Array(this.texCoords), this.gl.ARRAY_BUFFER);
-                this.indexBuffer = this.createBuffer(new Uint16Array(this.indices), this.gl.ELEMENT_ARRAY_BUFFER);
-
-                this.setPosition(position[0], position[1], position[2]);
-                this.setRotation(rotation.x, rotation.y);
-                this.setScale(scale);
-                this.loaded = true;
             },
             undefined,
             (error) => {

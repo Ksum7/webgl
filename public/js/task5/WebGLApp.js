@@ -27,7 +27,8 @@ export class WebGLApp {
             new ThreeObject(this.gl, 'tower', 1, [10, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'rock', 1, [15, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'fish', 1, [20, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
-            new Cube(this.gl, 1, [-3, 0, 0], { x: 0, y: 0 }, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'street_lamp', 1, [-5, 0, 0], { x: 0, y: 0 }, 0.1, [1, 1, 1, 1]),
+            // new Cube(this.gl, 100, [0, -50, 0], { x: 0, y: 0 }, [1, 1, 1, 1]),
             new Cube(this.gl, 0.1, [0, 1, 1], { x: 0, y: 0 }, [1, 1, 1, 1]),
         ];
 
@@ -38,23 +39,21 @@ export class WebGLApp {
         this.objs[2].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
         this.objs[3].setTexture(loadTexture(this.gl, `../../textures/rock1.jpg`));
         this.objs[4].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[5].setTexture(loadTexture(this.gl, '../../textures/number1.png'));
-        // for (let i = 0; i < this.objs.length; i++) {
-        //     this.objs[i].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        // }
+        this.objs[5].setTexture(loadTexture(this.gl, '../../textures/concrete.jpg'));
+        // this.objs[6].setTexture(loadTexture(this.gl, '../../textures/nothing.png'));
 
         this.lightPosition = [0, 1, 1];
         this.lightColor = [1, 1, 1];
         this.ambientLight = [0.1, 0.1, 0.1];
-        this.specularColor = [1, 1, 1];
-        this.shininess = 32.0;
+        this.specularColor = [0.3, 0.3, 0.3];
+        this.shininess = 10.0;
         this.attenuationLinear = 0.1;
         this.attenuationQuadratic = 0.01;
 
         this.lights = [
-            new PointLight([0, 1, 1], [1, 1, 1], 0.1, 0.1, 0.01),
-            // new DirectionalLight([0, 1, 1], [0.8, 0.8, 0.8], 0.5),
-            // new SpotLight([0, 0, 0], [5, 0, 0], [1, 0, 0], 1.0, 0.9),
+            // new PointLight([0, 1, 1], [1, 1, 1], 0.1, 0.1, 0.01),
+            // new DirectionalLight([0, -1, -1], [0.8, 0.8, 0.8], 0.5),
+            new SpotLight([0, 1, 1], [0, -1, -1], [1, 0, 0], 1.0, 0.9),
         ];
 
         this.cameraPosition = [0, 0, -5];
