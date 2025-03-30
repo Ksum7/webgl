@@ -12,8 +12,14 @@ export class Cube extends RenderableObject {
         this.normals = [];
         this.texCoords = [];
         this.indices = [];
+        this.loaded = true;
 
         this.initGeometry();
+
+        this.localAABB = {
+            min: [-this.size / 2, -this.size / 2, -this.size / 2],
+            max: [this.size / 2, this.size / 2, this.size / 2],
+        };
 
         this.vertexBuffer = this.createBuffer(new Float32Array(this.vertices), this.gl.ARRAY_BUFFER);
         this.colorBuffer = this.createBuffer(new Float32Array(this.colors), this.gl.ARRAY_BUFFER);
@@ -116,7 +122,7 @@ export class Cube extends RenderableObject {
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
             shaderProgram.setUniform1i('uMaterialTexture', 0);
         }
-        
+
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
     }

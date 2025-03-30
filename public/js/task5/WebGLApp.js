@@ -22,15 +22,20 @@ export class WebGLApp {
         this.lastFPSTime = 0;
 
         this.objs = [
-            new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.01, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.005, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'chair', 1, [5, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'tower', 1, [10, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'rock', 1, [15, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'fish', 1, [20, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'street_lamp', 1, [-5, 0, 0], { x: 0, y: 0 }, 0.1, [1, 1, 1, 1]),
-            // new Cube(this.gl, 100, [0, -50, 0], { x: 0, y: 0 }, [1, 1, 1, 1]),
-            new Cube(this.gl, 0.1, [0, 1, 1], { x: 0, y: 0 }, [1, 1, 1, 1]),
+            new Cube(this.gl, 0.1, [0, 1, 2], { x: 0, y: 0 }, [1, 1, 1, 1]),
         ];
+
+        this.player = this.objs[0];
+        this.playerOffset = [0, 0, 2];
+        this.playerRotationOffset = { x: Math.PI / 2, y: 0 };
+
+        this.player.setRotation(this.playerRotationOffset.x, this.playerRotationOffset.y);
 
         this.textures = [loadTexture(this.gl, '../../textures/fish.png')];
 
@@ -39,8 +44,9 @@ export class WebGLApp {
         this.objs[2].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
         this.objs[3].setTexture(loadTexture(this.gl, `../../textures/rock1.jpg`));
         this.objs[4].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[5].setTexture(loadTexture(this.gl, '../../textures/concrete.jpg'));
-        // this.objs[6].setTexture(loadTexture(this.gl, '../../textures/nothing.png'));
+        this.objs[5].setTexture(loadTexture(this.gl, `../../textures/concrete.jpg`));
+
+        this.objs[1].velocity = [-1, 0, 0];
 
         this.lightPosition = [0, 1, 1];
         this.lightColor = [1, 1, 1];
@@ -83,7 +89,6 @@ export class WebGLApp {
         }
         return gl;
     }
-
     // @ts-ignore
     async init() {
         if (!this.gl) {
@@ -99,14 +104,6 @@ export class WebGLApp {
             console.error('Не удалось создать шейдерные программы');
             return;
         }
-        // document.getElementById('attenuationLinear').addEventListener('input', (e) => {
-        //     // @ts-ignore
-        //     this.attenuationLinear = parseFloat(e.target.value);
-        // });
-        // document.getElementById('attenuationQuadratic').addEventListener('input', (e) => {
-        //     // @ts-ignore
-        //     this.attenuationQuadratic = parseFloat(e.target.value);
-        // });
         document.getElementById('ambientLight').addEventListener('input', (e) => {
             // @ts-ignore
             const value = parseFloat(e.target.value);
@@ -183,39 +180,33 @@ export class WebGLApp {
             Math.sin(this.cameraRotation.pitch),
             Math.cos(this.cameraRotation.pitch) * Math.cos(this.cameraRotation.yaw)
         );
-
         const right = vec3.fromValues(Math.cos(this.cameraRotation.yaw), 0, -Math.sin(this.cameraRotation.yaw));
-
         const up = vec3.fromValues(0, 1, 0);
 
         const moveVector = vec3.create();
-
         const baseSpeed = this.moveSpeed;
         const shiftMultiplier = 3.0;
-
         const currentSpeed = this.keys['shift'] ? baseSpeed * shiftMultiplier : baseSpeed;
 
         if (this.keys['w'] || this.keys['ц'])
             vec3.scaleAndAdd(moveVector, moveVector, forward, currentSpeed * deltaTime);
         if (this.keys['s'] || this.keys['ы'])
             vec3.scaleAndAdd(moveVector, moveVector, forward, -currentSpeed * deltaTime);
-
         if (this.keys['a'] || this.keys['ф']) vec3.scaleAndAdd(moveVector, moveVector, right, currentSpeed * deltaTime);
         if (this.keys['d'] || this.keys['в'])
             vec3.scaleAndAdd(moveVector, moveVector, right, -currentSpeed * deltaTime);
-
         if (this.keys['space']) vec3.scaleAndAdd(moveVector, moveVector, up, currentSpeed * deltaTime);
         if (this.keys['control']) vec3.scaleAndAdd(moveVector, moveVector, up, -currentSpeed * deltaTime);
 
         // @ts-ignore
         vec3.add(this.cameraPosition, this.cameraPosition, moveVector);
 
-        this.viewMatrix = mat4.create();
+        const eye = this.cameraPosition;
         const target = vec3.create();
         // @ts-ignore
-        vec3.add(target, this.cameraPosition, forward);
+        vec3.add(target, eye, forward);
         // @ts-ignore
-        mat4.lookAt(this.viewMatrix, this.cameraPosition, target, up);
+        mat4.lookAt(this.viewMatrix, eye, target, up);
     }
 
     async loadShader(url) {
@@ -244,6 +235,17 @@ export class WebGLApp {
         }
     }
 
+    checkAABBCollision(aabb1, aabb2) {
+        return (
+            aabb1.min[0] < aabb2.max[0] &&
+            aabb1.max[0] > aabb2.min[0] &&
+            aabb1.min[1] < aabb2.max[1] &&
+            aabb1.max[1] > aabb2.min[1] &&
+            aabb1.min[2] < aabb2.max[2] &&
+            aabb1.max[2] > aabb2.min[2]
+        );
+    }
+
     render() {
         this.gl.clearColor(0.1, 0.1, 0.1, 1.0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -251,13 +253,51 @@ export class WebGLApp {
         const shaderProgram = this.phongProgram;
         shaderProgram.use();
 
-        // @ts-ignore
         shaderProgram.setLights(this.lights, this.viewMatrix);
         shaderProgram.setUniform3fv('uAmbientLight', this.ambientLight);
         shaderProgram.setUniform1f('uShininess', this.shininess);
-
         shaderProgram.setUniform3fv('uSpecularColor', this.specularColor);
         shaderProgram.setUniform1i('uUseSpecular', 1);
+
+        const forward = vec3.fromValues(
+            Math.cos(this.cameraRotation.pitch) * Math.sin(this.cameraRotation.yaw),
+            Math.sin(this.cameraRotation.pitch),
+            Math.cos(this.cameraRotation.pitch) * Math.cos(this.cameraRotation.yaw)
+        );
+        const right = vec3.fromValues(Math.cos(this.cameraRotation.yaw), 0, -Math.sin(this.cameraRotation.yaw));
+        const up = vec3.fromValues(0, 1, 0);
+
+        const playerPosition = vec3.create();
+        const offsetForward = vec3.scale(vec3.create(), forward, this.playerOffset[2]);
+        const offsetRight = vec3.scale(vec3.create(), right, this.playerOffset[0]);
+        const offsetUp = vec3.scale(vec3.create(), up, this.playerOffset[1]);
+
+        // @ts-ignore
+        vec3.add(playerPosition, this.cameraPosition, offsetForward);
+        vec3.add(playerPosition, playerPosition, offsetRight);
+        vec3.add(playerPosition, playerPosition, offsetUp);
+
+        const oldPosition = [...this.player.position];
+
+        this.player.setPosition(playerPosition[0], playerPosition[1], playerPosition[2]);
+        this.player.setRotation(this.playerRotationOffset.x, 0);
+
+        const playerAABB = this.player.getWorldAABB();
+        this.objs.forEach((obj) => {
+            if (obj !== this.player && obj.localAABB) {
+                const objAABB = obj.getWorldAABB();
+                if (this.checkAABBCollision(playerAABB, objAABB)) {
+                    this.player.setPosition(oldPosition[0], oldPosition[1], oldPosition[2]);
+                    // @ts-ignore
+                    vec3.subtract(this.cameraPosition, this.player.position, offsetForward);
+                    // @ts-ignore
+                    vec3.subtract(this.cameraPosition, this.cameraPosition, offsetRight);
+                    // @ts-ignore
+                    vec3.subtract(this.cameraPosition, this.cameraPosition, offsetUp);
+                    return;
+                }
+            }
+        });
 
         this.objs.forEach((obj) => {
             obj.render(shaderProgram, this.viewMatrix, this.projectionMatrix);
@@ -269,6 +309,22 @@ export class WebGLApp {
         this.lastTime = timestamp;
 
         this.updateCamera(deltaTime);
+
+        this.objs.forEach((obj) => obj.update(deltaTime));
+
+        const movingObjs = this.objs.filter((obj) => obj.velocity.some((v) => v !== 0));
+        movingObjs.forEach((movingObj) => {
+            this.objs.forEach((otherObj) => {
+                if (movingObj !== otherObj && movingObj.loaded && otherObj.loaded) {
+                    const aabb1 = movingObj.getWorldAABB();
+                    const aabb2 = otherObj.getWorldAABB();
+                    if (aabb1 && aabb2 && this.checkAABBCollision(aabb1, aabb2)) {
+                        movingObj.velocity = [0, 0, 0];
+                        otherObj.velocity = [0, 0, 0];
+                    }
+                }
+            });
+        });
 
         if (timestamp - this.lastFPSTime > 100) {
             document.getElementById('fpsCounter').textContent = `FPS: ${Math.floor(1 / deltaTime)}`;

@@ -21,7 +21,7 @@ export class ThreeObject extends RenderableObject {
 
         // LOAD DATA
         const objLoader = new OBJLoader();
-        // @ts-ignore
+
         objLoader.load(
             objPath,
             (object) => {
@@ -83,6 +83,8 @@ export class ThreeObject extends RenderableObject {
                     // @ts-ignore
                     this.indices = allIndices;
 
+                    this.localAABB = this.calculateAABB(this.vertices);
+
                     if (this.texCoords && this.texCoords.length !== (this.vertices.length / 3) * 2) {
                         console.warn(`Несоответствие текстурных координат для ${name}`);
                     }
@@ -110,6 +112,24 @@ export class ThreeObject extends RenderableObject {
                 console.error(`Ошибка загрузки ${objPath}:`, error);
             }
         );
+    }
+
+    calculateAABB(vertices) {
+        let minX = vertices[0],
+            maxX = vertices[0];
+        let minY = vertices[1],
+            maxY = vertices[1];
+        let minZ = vertices[2],
+            maxZ = vertices[2];
+        for (let i = 3; i < vertices.length; i += 3) {
+            minX = Math.min(minX, vertices[i]);
+            maxX = Math.max(maxX, vertices[i]);
+            minY = Math.min(minY, vertices[i + 1]);
+            maxY = Math.max(maxY, vertices[i + 1]);
+            minZ = Math.min(minZ, vertices[i + 2]);
+            maxZ = Math.max(maxZ, vertices[i + 2]);
+        }
+        return { min: [minX, minY, minZ], max: [maxX, maxY, maxZ] };
     }
 
     createBuffer(data, type) {
