@@ -13,16 +13,11 @@ uniform float uAttenuationQuadratic;
 uniform bool uUseSpecular;
 uniform int uLightingModel;
 uniform sampler2D uMaterialTexture;
-uniform sampler2D uNumberTexture;
 uniform float uTextureMixFactor;
 uniform float uColorMixFactor;
 
 void main() {
-    vec4 materialColor = texture2D(uMaterialTexture, vTexCoord);
-    vec4 numberColor = texture2D(uNumberTexture, vTexCoord);
-    vec4 mixedTexture = mix(materialColor, numberColor, uTextureMixFactor);
-
-    vec4 baseColor = mix(mixedTexture, mixedTexture * vColor, uColorMixFactor);
+    vec4 baseColor = texture2D(uMaterialTexture, vTexCoord);
 
     vec3 normal = normalize(vNormalEye);
     vec3 lightDir = normalize(uLightPositionEye - vPositionEye);

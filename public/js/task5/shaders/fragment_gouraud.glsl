@@ -14,11 +14,7 @@ uniform vec3 uSpecularColor;
 uniform int uLightingModel;
 
 void main() {
-    vec4 materialColor = texture2D(uMaterialTexture, vTexCoord);
-    vec4 numberColor = texture2D(uNumberTexture, vTexCoord);
-    vec4 mixedTexture = mix(materialColor, numberColor, uTextureMixFactor);
-
-    vec4 baseColor = mix(mixedTexture, mixedTexture * vColor, uColorMixFactor);
+    vec4 baseColor = vec4(0.0,0.0,0.0,1.0);//texture2D(uMaterialTexture, vTexCoord);
 
     vec3 ambient = uAmbientLight * baseColor.rgb;
     vec3 diffuse = vDiffuseFactor * uLightColor * baseColor.rgb;

@@ -94,8 +94,6 @@ export class Cube extends RenderableObject {
         shaderProgram.setUniformMatrix4fv('uModelViewMatrix', modelViewMatrix);
         shaderProgram.setUniformMatrix4fv('uProjectionMatrix', projectionMatrix);
         shaderProgram.setUniformMatrix3fv('uNormalMatrix', normalMatrix);
-        shaderProgram.setUniform1f('uTextureMixFactor', this.textureMixFactor);
-        shaderProgram.setUniform1f('uColorMixFactor', this.colorMixFactor);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         this.gl.vertexAttribPointer(shaderProgram.locations.aPosition, 3, this.gl.FLOAT, false, 0, 0);
@@ -113,18 +111,12 @@ export class Cube extends RenderableObject {
         this.gl.vertexAttribPointer(shaderProgram.locations.aTexCoord, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.enableVertexAttribArray(shaderProgram.locations.aTexCoord);
 
-        if (this.materialTexture) {
+        if (this.texture) {
             this.gl.activeTexture(this.gl.TEXTURE0);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.materialTexture);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
             shaderProgram.setUniform1i('uMaterialTexture', 0);
         }
-
-        if (this.numberTexture) {
-            this.gl.activeTexture(this.gl.TEXTURE1);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.numberTexture);
-            shaderProgram.setUniform1i('uNumberTexture', 1);
-        }
-
+        
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
     }
