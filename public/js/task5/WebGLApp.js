@@ -22,21 +22,25 @@ export class WebGLApp {
         this.lastTime = 0;
 
         this.objs = [
-            //new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.01, [0.75, 0.75, 0.75, 1]),
-            //new ThreeObject(this.gl, 'chair', 1, [0, 0, 0], { x: 0, y: 0 }, 1, [0.75, 0.75, 0.75, 1]),
-            //new ThreeObject(this.gl, 'tower', 1, [0, 0, 0], { x: 0, y: 0 }, 0.25, [0.75, 0.75, 0.75, 1]),
-            //new ThreeObject(this.gl, 'rock', 1, [0, 0, 0], { x: 0, y: 0 }, 0.25, [0.75, 0.75, 0.75, 1]),
-            //new ThreeObject(this.gl, 'fish', 1, [0, 0, 0], { x: 0, y: 0 }, 1, [0.75, 0.75, 0.75, 1]),
-            //new Cube(this.gl, 1, [-3, 0, 0], { x: 0, y: 0 }, [0.75, 0.75, 0.75, 1]),
+            new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.01, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'chair', 1, [5, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'tower', 1, [10, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'rock', 1, [15, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'fish', 1, [20, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
+            new Cube(this.gl, 1, [-3, 0, 0], { x: 0, y: 0 }, [1, 1, 1, 1]),
         ];
 
-        this.textures = [
-            loadTexture(this.gl, '../../textures/fish.png'),
-        ];
+        this.textures = [loadTexture(this.gl, '../../textures/fish.png')];
 
-        for (let i = 0; i < this.objs.length; i++) {
-            this.objs[i].setTexture(this.textures[i])
-        }
+        this.objs[0].setTexture(loadTexture(this.gl, `../../textures/ufo.jpg`));
+        this.objs[1].setTexture(loadTexture(this.gl, `../../textures/chair.png`));
+        this.objs[2].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
+        this.objs[3].setTexture(loadTexture(this.gl, `../../textures/rock1.jpg`));
+        this.objs[4].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
+        this.objs[5].setTexture(loadTexture(this.gl, '../../textures/number1.png'));
+        // for (let i = 0; i < this.objs.length; i++) {
+        //     this.objs[i].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
+        // }
 
         this.lightPosition = [0, 1, 1];
         this.lightColor = [1, 1, 1];
@@ -48,16 +52,25 @@ export class WebGLApp {
         this.shadingModel = 'gouraud';
         this.lightingModel = 0;
 
-        this.numberTexture = loadTexture(this.gl, '../../textures/number1.png'),
-        this.lightCube = new Cube(this.gl, 0.1, this.lightPosition, { x: 0, y: 0 }, [1, 1, 1, 0.5]);
+        (this.numberTexture = loadTexture(this.gl, '../../textures/number1.png')),
+            (this.lightCube = new Cube(this.gl, 0.1, this.lightPosition, { x: 0, y: 0 }, [1, 1, 1, 0.5]));
         this.lightCube.setTexture(this.numberTexture);
-        this.viewMatrix = mat4.translate(mat4.create(), mat4.create(), [0, -1, -5]);
+
+        this.cameraPosition = [0, 0, -5];
+        this.cameraRotation = { yaw: 0, pitch: 0 };
+        this.moveSpeed = 2.0;
+        this.mouseSensitivity = 0.002;
+        this.isMouseLocked = false;
+
+        // @ts-ignore
+        this.viewMatrix = mat4.translate(mat4.create(), mat4.create(), this.cameraPosition);
 
         this.init().catch((error) => {
             console.error('Initialization failed:', error);
         });
     }
 
+    // @ts-ignore
     async init() {
         if (!this.gl) {
             alert('WebGL not supported');
@@ -87,6 +100,8 @@ export class WebGLApp {
         window.addEventListener('keyup', (event) => {
             this.keys[event.key] = false;
         });
+
+        this.setupControls();
 
         this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -151,6 +166,89 @@ export class WebGLApp {
         requestAnimationFrame((t) => this.animate(t));
     }
 
+    setupControls() {
+        window.addEventListener('keydown', (event) => {
+            if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+                this.keys['shift'] = true;
+            } else if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+                this.keys['control'] = true;
+            } else if (event.code === 'Space') {
+                this.keys['space'] = true;
+            } else {
+                this.keys[event.key.toLowerCase()] = true;
+            }
+        });
+
+        window.addEventListener('keyup', (event) => {
+            if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+                this.keys['shift'] = false;
+            } else if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+                this.keys['control'] = false;
+            } else if (event.code === 'Space') {
+                this.keys['space'] = false;
+            } else {
+                this.keys[event.key.toLowerCase()] = false;
+            }
+        });
+
+        this.canvas.addEventListener('click', () => {
+            this.canvas.requestPointerLock();
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            this.isMouseLocked = document.pointerLockElement === this.canvas;
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (this.isMouseLocked) {
+                this.cameraRotation.yaw -= event.movementX * this.mouseSensitivity;
+                this.cameraRotation.pitch -= event.movementY * this.mouseSensitivity;
+                this.cameraRotation.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.cameraRotation.pitch));
+            }
+        });
+    }
+
+    updateCamera(deltaTime) {
+        const forward = vec3.fromValues(
+            Math.cos(this.cameraRotation.pitch) * Math.sin(this.cameraRotation.yaw),
+            Math.sin(this.cameraRotation.pitch),
+            Math.cos(this.cameraRotation.pitch) * Math.cos(this.cameraRotation.yaw)
+        );
+
+        const right = vec3.fromValues(Math.cos(this.cameraRotation.yaw), 0, -Math.sin(this.cameraRotation.yaw));
+
+        const up = vec3.fromValues(0, 1, 0);
+
+        const moveVector = vec3.create();
+
+        const baseSpeed = this.moveSpeed;
+        const shiftMultiplier = 3.0;
+
+        const currentSpeed = this.keys['shift'] ? baseSpeed * shiftMultiplier : baseSpeed;
+
+        if (this.keys['w'] || this.keys['ц'])
+            vec3.scaleAndAdd(moveVector, moveVector, forward, currentSpeed * deltaTime);
+        if (this.keys['s'] || this.keys['ы'])
+            vec3.scaleAndAdd(moveVector, moveVector, forward, -currentSpeed * deltaTime);
+
+        if (this.keys['a'] || this.keys['ф']) vec3.scaleAndAdd(moveVector, moveVector, right, currentSpeed * deltaTime);
+        if (this.keys['d'] || this.keys['в'])
+            vec3.scaleAndAdd(moveVector, moveVector, right, -currentSpeed * deltaTime);
+
+        if (this.keys['space']) vec3.scaleAndAdd(moveVector, moveVector, up, currentSpeed * deltaTime);
+        if (this.keys['control']) vec3.scaleAndAdd(moveVector, moveVector, up, -currentSpeed * deltaTime);
+
+        // @ts-ignore
+        vec3.add(this.cameraPosition, this.cameraPosition, moveVector);
+
+        this.viewMatrix = mat4.create();
+        const target = vec3.create();
+        // @ts-ignore
+        vec3.add(target, this.cameraPosition, forward);
+        // @ts-ignore
+        mat4.lookAt(this.viewMatrix, this.cameraPosition, target, up);
+    }
+
     async loadShader(url) {
         const response = await fetch(url);
         if (!response.ok) {
@@ -199,23 +297,9 @@ export class WebGLApp {
         shaderProgram.setUniform1i('uUseSpecular', this.lightingModel > 0 ? 1 : 0);
         shaderProgram.setUniform1i('uLightingModel', this.lightingModel);
 
-        // this.podiumCenter = this.getPodiumCenter();
-        // const podiumModelMatrix = mat4.create();
-        // // @ts-ignore
-        // mat4.translate(podiumModelMatrix, podiumModelMatrix, this.podiumCenter);
-        // mat4.rotateY(podiumModelMatrix, podiumModelMatrix, this.podiumRotation);
-        // mat4.translate(
-        //     podiumModelMatrix,
-        //     podiumModelMatrix,
-        //     // @ts-ignore
-        //     this.podiumCenter.map((x) => -x)
-        // );
-
         const updatedViewMatrix = mat4.rotateY(mat4.create(), this.viewMatrix, this.globalRotation);
 
         this.lightCube.render(shaderProgram, updatedViewMatrix, this.projectionMatrix);
-
-        // mat4.multiply(updatedViewMatrix, updatedViewMatrix, podiumModelMatrix);
 
         this.objs.forEach((obj) => {
             obj.render(shaderProgram, updatedViewMatrix, this.projectionMatrix);
@@ -226,43 +310,12 @@ export class WebGLApp {
         const deltaTime = (timestamp - this.lastTime) * 0.001;
         this.lastTime = timestamp;
 
-        // if (this.keys['1']) {
-        //     this.cubes[0].setRotation(this.cubes[0].rotation.x, this.cubes[0].rotation.y + deltaTime);
-        // }
-        // if (this.keys['2']) {
-        //     this.cubes[1].setRotation(this.cubes[1].rotation.x, this.cubes[1].rotation.y + deltaTime);
-        // }
-        // if (this.keys['3']) {
-        //     this.cubes[2].setRotation(this.cubes[2].rotation.x, this.cubes[2].rotation.y + deltaTime);
-        // }
-        // if (this.keys['4']) {
-        //     this.cubes[3].setRotation(this.cubes[3].rotation.x, this.cubes[3].rotation.y + deltaTime);
-        // }
-
-        // if (this.keys['5']) this.podiumRotation += deltaTime;
-        // if (this.keys['a']) this.globalRotation += deltaTime;
-        // if (this.keys['d']) this.globalRotation -= deltaTime;
+        this.updateCamera(deltaTime);
 
         this.render();
+
+        document.getElementById('fpsCounter').textContent = `FPS: ${Math.floor(1 / deltaTime)}`;
+
         requestAnimationFrame((t) => this.animate(t));
     }
-
-    // getPodiumCenter() {
-    //     let sumX = 0;
-    //     let sumY = 0;
-    //     let sumZ = 0;
-
-    //     for (let i = 0; i < this.cubes.length; i++) {
-    //         const [x, y, z] = this.cubes[i].position;
-    //         sumX += x;
-    //         sumY += y;
-    //         sumZ += z;
-    //     }
-
-    //     const centerX = sumX / this.cubes.length;
-    //     const centerY = sumY / this.cubes.length;
-    //     const centerZ = sumZ / this.cubes.length;
-
-    //     return [centerX, centerY, centerZ];
-    // }
 }
