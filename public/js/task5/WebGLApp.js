@@ -280,7 +280,10 @@ export class WebGLApp {
         const oldPosition = [...this.player.position];
 
         this.player.setPosition(playerPosition[0], playerPosition[1], playerPosition[2]);
-        this.player.setRotation(this.playerRotationOffset.x, 0);
+        this.player.setRotation(
+            this.playerRotationOffset.x + this.cameraRotation.pitch,
+            this.playerRotationOffset.y + this.cameraRotation.yaw
+        );
 
         const playerAABB = this.player.getWorldAABB();
         this.objs.forEach((obj) => {

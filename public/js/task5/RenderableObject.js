@@ -35,8 +35,9 @@ export class RenderableObject {
         mat4.identity(this.modelMatrix);
         // @ts-ignore
         mat4.translate(this.modelMatrix, this.modelMatrix, this.position);
-        mat4.rotateX(this.modelMatrix, this.modelMatrix, this.rotation.x);
         mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotation.y);
+        mat4.rotateX(this.modelMatrix, this.modelMatrix, this.rotation.x);
+
         mat4.scale(this.modelMatrix, this.modelMatrix, [this.scale, this.scale, this.scale]);
     }
 
