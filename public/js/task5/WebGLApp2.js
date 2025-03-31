@@ -7,7 +7,58 @@ import { PointLight, DirectionalLight, SpotLight } from './Light';
 
 const path = '../js/task5/';
 
-export class WebGLApp {
+
+
+export class WebGLApp2 {
+    generate(pos=[0,0,0]) {
+        const rand = Math.random();
+    
+        const tpos = [...pos]
+        tpos[0] = 2
+        const bpos = [...pos]
+        bpos[0] = -2
+    
+        const lpos = [...pos]
+        lpos[2] = 2
+        const rpos = [...pos]
+        rpos[2] = -2
+
+        const diagpos = [...pos]
+        diagpos[0] = 2
+        diagpos[2] = 2
+
+        const mdiagpos = [...pos]
+        mdiagpos[0] = -2
+        mdiagpos[2] = -2
+    
+    
+        this.objs.push(new ThreeObject(this.gl, 'tower', 1, pos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'rock', 1, tpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'rock', 1, rpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'rock', 1, bpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'rock', 1, lpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'street_lamp', 1, diagpos, { x: 0, y: Math.PI/2 }, 0.1, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'street_lamp', 1, mdiagpos, { x: 0, y: 0 }, 0.1, [1, 1, 1, 1]),)
+    
+        const len = this.objs.length
+        this.objs[len-7].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
+        this.objs[len-6].setTexture(loadTexture(this.gl, `../../textures/rock1.jpg`));
+        this.objs[len-5].setTexture(loadTexture(this.gl, `../../textures/rock2.jpg`));
+        this.objs[len-4].setTexture(loadTexture(this.gl, `../../textures/rock3.jpg`));
+        this.objs[len-3].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
+        this.objs[len-2].setTexture(loadTexture(this.gl, `../../textures/concrete.jpg`));
+        this.objs[len-1].setTexture(loadTexture(this.gl, `../../textures/concrete.jpg`));
+
+        const lightpos1 = [...diagpos]
+        lightpos1[1] = 1
+        this.lights.push(new SpotLight(lightpos1, [0, -1, 0], [0, 1, 0], 0.2, 0.1));
+
+        const lightpos2 = [...mdiagpos]
+        lightpos2[1] = 1
+        this.lights.push(new SpotLight(lightpos2, [0, -1, 0], [0, 0, 1], 0.2, 0.1));
+    
+    }
+
     constructor() {
         this.keys = {};
         this.prevKeys = {};
@@ -26,21 +77,17 @@ export class WebGLApp {
         this.circlePos = -1;
 
         this.objs = [
+
             new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.005, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'tower', 1, [0, 0, 0], { x: 0, y: 0 }, 1.0, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [10, 8, 0], { x: 0, y: -Math.PI/4 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [-10, 8, 0], { x: 0, y: Math.PI/4 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [0, 8, 10], { x: 0, y: Math.PI/2 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [0, 8, -10], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'chair', 1, [0, 8.3, 0], { x: 0, y: 1 }, 1, [1, 1, 1, 1])
             // new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.005, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'chair', 1, [5, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'tower', 1, [10, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'rock', 1, [15, 0, 0], { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'fish', 1, [20, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'street_lamp', 1, [-5, 0, 0], { x: 0, y: 0 }, 0.1, [1, 1, 1, 1]),
-            // new Cube(this.gl, 0.1, [0, 1, 2], { x: 0, y: 0 }, [1, 1, 1, 1]),
+            new Cube(this.gl, 500, [0, -250, 2], { x: 0, y: 0 }, [1, 1, 1, 1]),
         ];
+
 
         this.player = this.objs[0];
         this.playerOffset = [0, 0, 2];
@@ -52,17 +99,12 @@ export class WebGLApp {
         this.textures = [loadTexture(this.gl, '../../textures/fish.png')];
 
         this.objs[0].setTexture(loadTexture(this.gl, `../../textures/ufo.jpg`));
-        this.objs[1].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
-        this.objs[2].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[3].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[4].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[5].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[6].setTexture(loadTexture(this.gl, `../../textures/chair.png`));
+        this.objs[1].setTexture(loadTexture(this.gl, `../../textures/ufo.jpg`));
 
 
         this.lightPosition = [0, 1, 1];
         this.lightColor = [1, 1, 1];
-        this.ambientLight = [0.3, 0.3, 0.3];
+        this.ambientLight = [0.1, 0.1, 0.1];
         this.specularColor = [0.3, 0.3, 0.3];
         this.shininess = 10.0;
         this.attenuationLinear = 0.1;
@@ -70,11 +112,15 @@ export class WebGLApp {
 
         this.lights = [
             // new PointLight([0, 1, 1], [1, 1, 1], 0.1, 0.1, 0.01),
-            // new DirectionalLight([0, -1, -1], [0.8, 0.8, 0.8], 0.5),
-            new SpotLight([0, 1, 1], [0, -1, -1], [1, 0, 0], 1.0, 0.9),
+            new DirectionalLight([0, -1, -1], [0.8, 0.8, 0.8], 0.1),
+            // new PointLight([0, 1, 1], [1, 0, 0], 1.0, 0.9),
         ];
 
-        this.cameraPosition = [0, 0, -5];
+        this.generate();
+        this.generate([Math.random()*20,0,Math.random()*20]);
+        this.generate([-Math.random()*10,0,-Math.random()*10]);
+
+        this.cameraPosition = [0, 10, -5];
         this.cameraRotation = { yaw: 0, pitch: 0 };
         this.moveSpeed = 2.0;
         this.mouseSensitivity = 0.002;
@@ -283,6 +329,7 @@ export class WebGLApp {
         //Update velocities
         this.circlePos = (this.circlePos + 1) % 100
         this.objs.forEach((obj) => {
+            //@ts-ignore
             if (obj.name == "fish") {
                 obj.velocity = this.circleVelocities[this.circlePos]
             }
@@ -320,7 +367,7 @@ export class WebGLApp {
             playerPosition[1],
             playerPosition[2] + offsetUp[2] + offsetForward[2] * 0.1,
         ];
-        this.playerLight.direction = [offsetForward[0], 0, offsetForward[2]];
+        this.playerLight.direction = [offsetForward[0], playerPosition[1], offsetForward[2]];
 
         const playerAABB = this.player.getWorldAABB();
         this.objs.forEach((obj) => {

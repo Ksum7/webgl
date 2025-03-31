@@ -5,7 +5,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 export class ThreeObject extends RenderableObject {
     constructor(gl, name, size = 1, position = [0, 0, 0], rotation = { x: 0, y: 0 }, scale = 1, color = [1, 1, 1, 1]) {
         super(gl);
-
+        this.name = name
         const objPath = `../../objects/${name}.obj`;
 
         this.size = size;
