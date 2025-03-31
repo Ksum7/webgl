@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, vec2, vec3 } from 'gl-matrix';
 
 export class RenderableObject {
     constructor(gl) {
@@ -9,6 +9,8 @@ export class RenderableObject {
         this.scale = 1.0;
         this.color = [1, 1, 1, 1];
         this.texture = null;
+        this.bumpTexture = null;
+        this.bumpTextureSize = null;
         this.textureMixFactor = 0.5;
         this.colorMixFactor = 0.5;
         this.velocity = [0, 0, 0];
@@ -37,12 +39,16 @@ export class RenderableObject {
         mat4.translate(this.modelMatrix, this.modelMatrix, this.position);
         mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotation.y);
         mat4.rotateX(this.modelMatrix, this.modelMatrix, this.rotation.x);
-        mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotation.y);
+
         mat4.scale(this.modelMatrix, this.modelMatrix, [this.scale, this.scale, this.scale]);
     }
 
     setTexture(texture) {
         this.texture = texture;
+    }
+
+    setBumpTexture(texture) {
+        this.bumpTexture = texture;
     }
 
     update(deltaTime) {
