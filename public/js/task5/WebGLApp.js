@@ -29,9 +29,9 @@ export class WebGLApp {
             new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.005, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'tower', 1, [0, 0, 0], { x: 0, y: 0 }, 1.0, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'fish', 1, [10, 8, 0], { x: 0, y: -Math.PI/4 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [-10, 8, 0], { x: 0, y: Math.PI/4 }, 1, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'fish2', 1, [-10, 8, 0], { x: 0, y: Math.PI/4 }, 1, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'fish', 1, [0, 8, 10], { x: 0, y: Math.PI/2 }, 1, [1, 1, 1, 1]),
-            new ThreeObject(this.gl, 'fish', 1, [0, 8, -10], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
+            new ThreeObject(this.gl, 'fish2', 1, [0, 8, -10], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
             new ThreeObject(this.gl, 'chair', 1, [0, 8.3, 0], { x: 0, y: 1 }, 1, [1, 1, 1, 1])
             // new ThreeObject(this.gl, 'ufo', 1, [0, 0, 0], { x: 0, y: 0 }, 0.005, [1, 1, 1, 1]),
             // new ThreeObject(this.gl, 'chair', 1, [5, 0, 0], { x: 0, y: 0 }, 1, [1, 1, 1, 1]),
@@ -54,9 +54,9 @@ export class WebGLApp {
         this.objs[0].setTexture(loadTexture(this.gl, `../../textures/ufo.jpg`));
         this.objs[1].setTexture(loadTexture(this.gl, `../../textures/tower.jpg`));
         this.objs[2].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[3].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
+        this.objs[3].setTexture(loadTexture(this.gl, `../../textures/fish2.png`));
         this.objs[4].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
-        this.objs[5].setTexture(loadTexture(this.gl, `../../textures/fish.png`));
+        this.objs[5].setTexture(loadTexture(this.gl, `../../textures/fish2.png`));
         this.objs[6].setTexture(loadTexture(this.gl, `../../textures/chair.png`));
 
 
@@ -70,7 +70,7 @@ export class WebGLApp {
 
         this.lights = [
             // new PointLight([0, 1, 1], [1, 1, 1], 0.1, 0.1, 0.01),
-            // new DirectionalLight([0, -1, -1], [0.8, 0.8, 0.8], 0.5),
+            new DirectionalLight([0, -1, -1], [0.8, 0.8, 0.8], 0.5),
             new SpotLight([0, 1, 1], [0, -1, -1], [1, 0, 0], 1.0, 0.9),
         ];
 
@@ -283,7 +283,7 @@ export class WebGLApp {
         //Update velocities
         this.circlePos = (this.circlePos + 1) % 100
         this.objs.forEach((obj) => {
-            if (obj.name == "fish") {
+            if (obj.name == "fish" || obj.name == "fish2") {
                 obj.velocity = this.circleVelocities[this.circlePos]
             }
         })

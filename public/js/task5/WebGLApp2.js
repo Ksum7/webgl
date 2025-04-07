@@ -14,29 +14,29 @@ export class WebGLApp2 {
         const rand = Math.random();
     
         const tpos = [...pos]
-        tpos[0] = 2
+        tpos[0] += 2
         const bpos = [...pos]
-        bpos[0] = -2
+        bpos[0] += -2
     
         const lpos = [...pos]
-        lpos[2] = 2
+        lpos[2] += 2
         const rpos = [...pos]
-        rpos[2] = -2
+        rpos[2] += -2
 
         const diagpos = [...pos]
-        diagpos[0] = 2
-        diagpos[2] = 2
+        diagpos[0] += 2
+        diagpos[2] += 2
 
         const mdiagpos = [...pos]
-        mdiagpos[0] = -2
-        mdiagpos[2] = -2
+        mdiagpos[0] += -2
+        mdiagpos[2] += -2
     
     
         this.objs.push(new ThreeObject(this.gl, 'tower', 1, pos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
         this.objs.push(new ThreeObject(this.gl, 'rock', 1, tpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
-        this.objs.push(new ThreeObject(this.gl, 'rock', 1, rpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'stone', 1, rpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
         this.objs.push(new ThreeObject(this.gl, 'rock', 1, bpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
-        this.objs.push(new ThreeObject(this.gl, 'rock', 1, lpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
+        this.objs.push(new ThreeObject(this.gl, 'stone', 1, lpos, { x: 0, y: 0 }, 0.25, [1, 1, 1, 1]),)
         this.objs.push(new ThreeObject(this.gl, 'street_lamp', 1, diagpos, { x: 0, y: Math.PI/2 }, 0.1, [1, 1, 1, 1]),)
         this.objs.push(new ThreeObject(this.gl, 'street_lamp', 1, mdiagpos, { x: 0, y: 0 }, 0.1, [1, 1, 1, 1]),)
     
@@ -51,11 +51,11 @@ export class WebGLApp2 {
 
         const lightpos1 = [...diagpos]
         lightpos1[1] = 1
-        this.lights.push(new SpotLight(lightpos1, [0, -1, 0], [0, 1, 0], 0.2, 0.1));
+        this.lights.push(new SpotLight(lightpos1, [0, -1, 0], [Math.random(), Math.random(), Math.random()], 0.2, 0.1));
 
         const lightpos2 = [...mdiagpos]
         lightpos2[1] = 1
-        this.lights.push(new SpotLight(lightpos2, [0, -1, 0], [0, 0, 1], 0.2, 0.1));
+        this.lights.push(new SpotLight(lightpos2, [0, -1, 0], [Math.random(), Math.random(), Math.random()], 0.2, 0.1));
     
     }
 
